@@ -1,5 +1,6 @@
 import os , mlflow
-
+from dotenv import load_dotenv
+load_dotenv()
 def promote_model():
     dagshub_token=os.getenv('CAPSTONE_PROJECT')
     if not dagshub_token:
@@ -21,7 +22,7 @@ def promote_model():
     latest_version_staging=client.get_latest_versions(model_name,stages=['Staging'])[0].version
     
     # archive the current production model
-    prod_version=client.get_latest_version(model_name,stages=['Production'])
+    prod_version=client.get_latest_versions(model_name,stages=['Production'])
     for version in prod_version:
         client.transition_model_version_stage(
             name=model_name,
