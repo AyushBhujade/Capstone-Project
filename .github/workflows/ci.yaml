@@ -29,7 +29,7 @@ jobs:
 
       - name: run pipeline
         env:
-          CAPSTONE_TEST: ${{secrets.CAPSTONE_PROJECT}}
+          CAPSTONE_PROJECT: ${{secrets.CAPSTONE_PROJECT}}
         
         run: |
           dvc repro
