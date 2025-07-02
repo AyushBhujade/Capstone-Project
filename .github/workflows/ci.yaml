@@ -26,7 +26,10 @@ jobs:
       - name: install dependencies
         run: |
           pip install -r requirements.txt
-
+  run_pipeline:
+    runs_on: ubuntu-latest
+    steps:
+     
       - name: run pipeline
         env:
           CAPSTONE_PROJECT: ${{secrets.CAPSTONE_PROJECT}}
@@ -51,7 +54,10 @@ jobs:
         env:
           CAPSTONE_PROJECT: ${{secrets.CAPSTONE_PROJECT}}
         run: python -m unittest tests/test_flask_app.py
-
+  
+  aws_ecr:
+    runs-on: ubuntu-latest
+    steps: 
       - name: Login to AWS ECR
         if: success()
         run: |
@@ -76,3 +82,24 @@ jobs:
       - name: Push Docker image to ECR
         run: |
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
+
+  kubernetics:
+    runs_on: ubuntu-latest
+    steps:
+      - name: Set Up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+      
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name flask-app-cluster
+
+      - name: Create Kubernetes Secret
+        run: |
+          kubectl create secret generic capstone-secret \
+            --from-literal=CAPSTONE_PROJECT=${{ secrets.CAPSTONE_PROJECT }} --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy to EKS
+        run: |
+          kubectl apply -f deployment.yaml
