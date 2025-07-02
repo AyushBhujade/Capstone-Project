@@ -26,8 +26,9 @@ jobs:
       - name: install dependencies
         run: |
           pip install -r requirements.txt
-  run_pipeline:
+  run-pipeline:
     runs-on: ubuntu-latest
+    needs: project-testing
     steps:
      
       - name: run pipeline
@@ -56,6 +57,7 @@ jobs:
         run: python -m unittest tests/test_flask_app.py
   
   aws_ecr:
+    needs: run-pipeline
     runs-on: ubuntu-latest
     steps: 
       - name: Login to AWS ECR
@@ -84,6 +86,7 @@ jobs:
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
 
   kubernetics:
+    needs: aws_ecr
     runs-on: ubuntu-latest
     steps:
       - name: Set Up kubectl
